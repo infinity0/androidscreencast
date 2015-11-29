@@ -61,8 +61,8 @@ public class JFrameMain extends JFrame {
 		public void actionPerformed(ActionEvent e) {
 			if (injector == null)
 				return;
-			injector.injectKeycode(ConstEvtKey.ACTION_DOWN, key);
-			injector.injectKeycode(ConstEvtKey.ACTION_UP, key);
+			injector.injectKeycode(e.getWhen(), e.getWhen(), ConstEvtKey.ACTION_DOWN, key);
+			injector.injectKeycode(e.getWhen(), e.getWhen(), ConstEvtKey.ACTION_UP, key);
 		}
 
 	}
@@ -70,7 +70,7 @@ public class JFrameMain extends JFrame {
 	private IDevice device;
 	private Injector injector;
 	private Dimension oldImageDimension = null;
-	
+
 	public void setInjector(Injector injector) {
 		this.injector = injector;
 		injector.screencapture.setListener(new ScreenCaptureListener() {
@@ -94,19 +94,22 @@ public class JFrameMain extends JFrame {
 		KeyboardFocusManager.getCurrentKeyboardFocusManager()
 				.addKeyEventDispatcher(new KeyEventDispatcher() {
 
+					private long downTime = System.currentTimeMillis();
+
 					public boolean dispatchKeyEvent(KeyEvent e) {
 						if (!JFrameMain.this.isActive())
 							return false;
 						if (injector == null)
 							return false;
 						if (e.getID() == KeyEvent.KEY_PRESSED) {
+							downTime = e.getWhen();
 							int code = KeyCodeConverter.getKeyCode(e);
-							injector.injectKeycode(ConstEvtKey.ACTION_DOWN,
+							injector.injectKeycode(downTime, e.getWhen(), ConstEvtKey.ACTION_DOWN,
 									code);
 						}
 						if (e.getID() == KeyEvent.KEY_RELEASED) {
 							int code = KeyCodeConverter.getKeyCode(e);
-							injector.injectKeycode(ConstEvtKey.ACTION_UP, code);
+							injector.injectKeycode(downTime, e.getWhen(), ConstEvtKey.ACTION_UP, code);
 						}
 						return false;
 					}
@@ -158,21 +161,23 @@ public class JFrameMain extends JFrame {
 		setLocationRelativeTo(null);
 		/*
 		 * jp.addKeyListener(new KeyAdapter() {
-		 * 
+		 *
 		 * @Override public void keyPressed(KeyEvent e) { if(injector == null)
 		 * return; try { int code = KeyCodeConverter.getKeyCode(e);
 		 * injector.injectKeycode(ConstEvtKey.ACTION_DOWN,code); } catch
 		 * (IOException e1) { throw new RuntimeException(e1); } }
-		 * 
+		 *
 		 * @Override public void keyReleased(KeyEvent e) { if(injector == null)
 		 * return; try { int code = KeyCodeConverter.getKeyCode(e);
 		 * injector.injectKeycode(ConstEvtKey.ACTION_UP,code); } catch
 		 * (IOException e1) { throw new RuntimeException(e1); } }
-		 * 
-		 * 
+		 *
+		 *
 		 * });
 		 */
 		MouseAdapter ma = new MouseAdapter() {
+
+			private long downTime = System.currentTimeMillis();
 
 			@Override
 			public void mouseDragged(MouseEvent arg0) {
@@ -181,7 +186,7 @@ public class JFrameMain extends JFrame {
 				try {
 					Point p2 = jp.getRawPoint(arg0.getPoint());
 					injector
-							.injectMouse(ConstEvtMotion.ACTION_MOVE, p2.x, p2.y);
+							.injectMouse(downTime, arg0.getWhen(), ConstEvtMotion.ACTION_MOVE, p2.x, p2.y);
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
@@ -192,9 +197,10 @@ public class JFrameMain extends JFrame {
 				if (injector == null)
 					return;
 				try {
+					downTime = arg0.getWhen();
 					Point p2 = jp.getRawPoint(arg0.getPoint());
 					injector
-							.injectMouse(ConstEvtMotion.ACTION_DOWN, p2.x, p2.y);
+							.injectMouse(downTime, arg0.getWhen(), ConstEvtMotion.ACTION_DOWN, p2.x, p2.y);
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
@@ -211,7 +217,7 @@ public class JFrameMain extends JFrame {
 						return;
 					}
 					Point p2 = jp.getRawPoint(arg0.getPoint());
-					injector.injectMouse(ConstEvtMotion.ACTION_UP, p2.x, p2.y);
+					injector.injectMouse(downTime, arg0.getWhen(), ConstEvtMotion.ACTION_UP, p2.x, p2.y);
 
 				} catch (IOException e) {
 					throw new RuntimeException(e);
@@ -225,8 +231,8 @@ public class JFrameMain extends JFrame {
 				try {
 					// injector.injectKeycode(ConstEvtKey.ACTION_DOWN,code);
 					// injector.injectKeycode(ConstEvtKey.ACTION_UP,code);
-					injector.injectTrackball(arg0.getWheelRotation() < 0 ? -1f
-							: 1f);
+					injector.injectTrackball(downTime, arg0.getWhen(),
+						arg0.getWheelRotation() < 0 ? -1f : 1f);
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}

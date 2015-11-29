@@ -102,10 +102,7 @@ public class Injector {
 		}
 	}
 
-	public void injectMouse(int action, float x, float y) throws IOException {
-		long downTime = 10;
-		long eventTime = 10;
-
+	public void injectMouse(long downTime, long eventTime, int action, float x, float y) throws IOException {
 		int metaState = -1;
 
 		String cmdList1 = "pointer/" + downTime + "/" + eventTime + "/"
@@ -113,9 +110,7 @@ public class Injector {
 		injectData(cmdList1);
 	}
 
-	public void injectTrackball(float amount) throws IOException {
-		long downTime = 0;
-		long eventTime = 0;
+	public void injectTrackball(long downTime, long eventTime, float amount) throws IOException {
 		float x = 0;
 		float y = amount;
 		int metaState = -1;
@@ -130,8 +125,8 @@ public class Injector {
 		injectData(cmdList2);
 	}
 
-	public void injectKeycode(int type, int keyCode) {
-		String cmdList = "key/" + type + "/" + keyCode;
+	public void injectKeycode(long downTime, long eventTime, int type, int keyCode) {
+		String cmdList = "key/" + downTime + "/" + eventTime + "/" + type + "/" + keyCode;
 		injectData(cmdList);
 	}
 

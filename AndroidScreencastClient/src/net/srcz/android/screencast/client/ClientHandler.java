@@ -131,9 +131,13 @@ public class ClientHandler {
     }
 
     private static KeyEvent getKeyEvent(String[] args) {
-    	int action = Integer.parseInt(args[1]);
-    	int code = Integer.parseInt(args[2]);
-    	KeyEvent key = new KeyEvent(action, code);
+    	// TODO: send/parse shift/ctrl/etc other modifiers here
+    	int i = 1;
+    	long downTime = Long.parseLong(args[i++]);
+    	long eventTime = Long.parseLong(args[i++]);
+    	int action = Integer.parseInt(args[i++]);
+    	int code = Integer.parseInt(args[i++]);
+    	KeyEvent key = new KeyEvent(downTime, eventTime, action, code, 0);
     	key.setSource(InputDevice.SOURCE_KEYBOARD);
     	return key;
     }
