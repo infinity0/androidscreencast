@@ -16,11 +16,11 @@ public class Main extends SwingApplication {
 	JFrameMain jf;
 	Injector injector;
 	IDevice device;
-	
+
 	public Main(boolean nativeLook) throws IOException {
 		super(nativeLook);
 		JSplashScreen jw = new JSplashScreen("");
-		
+
 		try {
 			initialize(jw);
 		} finally {
@@ -28,16 +28,17 @@ public class Main extends SwingApplication {
 			jw = null;
 		}
 	}
-	
+
 	private void initialize(JSplashScreen jw) throws IOException {
 		jw.setText("Getting devices list...");
 		jw.setVisible(true);
-		
-		AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
+
+		AndroidDebugBridge.init(false);
+		AndroidDebugBridge bridge = AndroidDebugBridge.createBridge("/usr/bin/adb", false);
 		waitDeviceList(bridge);
 
 		IDevice devices[] = bridge.getDevices();
-		
+
 		jw.setVisible(false);
 
 		// Let the user choose the device
@@ -46,32 +47,32 @@ public class Main extends SwingApplication {
 		} else {
 			JDialogDeviceList jd = new JDialogDeviceList(devices);
 			jd.setVisible(true);
-			
+
 			device = jd.getDevice();
 		}
 		if(device == null) {
 			System.exit(0);
 			return;
 		}
-		
+
 		// Start showing the device screen
 		jf = new JFrameMain(device);
 		jf.setTitle(""+device);
-		
-		
+
+
 		// Show window
 		jf.setVisible(true);
-		
+
 		// Starting injector
 		jw.setText("Starting input injector...");
 		jw.setVisible(true);
 
 		injector = new Injector(device);
 		injector.start();
-		jf.setInjector(injector);	
+		jf.setInjector(injector);
 	}
 
-	
+
 	private void waitDeviceList(AndroidDebugBridge bridge) {
 		int count = 0;
 		while (bridge.hasInitialDeviceList() == false) {
@@ -87,12 +88,12 @@ public class Main extends SwingApplication {
 			}
 		}
 	}
-	
+
 	protected void close() {
 		System.out.println("cleaning up...");
 		if(injector != null)
 			injector.close();
-	
+
 		if(device != null) {
 			synchronized (device) {
 				AndroidDebugBridge.terminate();

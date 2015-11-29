@@ -10,6 +10,8 @@ import java.net.Socket;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.hardware.input.InputManager;
+import android.view.InputDevice;
 import android.view.IWindowManager;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -17,6 +19,7 @@ import android.view.MotionEvent;
 public class ClientHandler {
 	IBinder wmbinder = ServiceManager.getService( "window" );
 	final IWindowManager wm = IWindowManager.Stub.asInterface( wmbinder );
+	final InputManager im = InputManager.getInstance();
     Socket s;
 
 	public ClientHandler(Socket s) throws IOException, RemoteException {
@@ -26,7 +29,7 @@ public class ClientHandler {
 				sendFrameBuffer();
 			}
 		};
-		
+
 		Thread tHandleCmd = new Thread() {
 			public void run() {
 				handleCmd();
@@ -34,14 +37,14 @@ public class ClientHandler {
 		};
 		tSend.start();
 		tHandleCmd.start();
-		
+
 		try {
 			tSend.join();
 			tHandleCmd.join();
 		} catch (InterruptedException e) {
 		}
 	}
-	
+
 	private void sendFrameBuffer() {
 		try {
 			Process p = Runtime.getRuntime().exec("/system/bin/cat /dev/graphics/fb0");
@@ -52,21 +55,21 @@ public class ClientHandler {
 			while(true) {
 				//FileInputStream fos = new FileInputStream("/dev/graphics/fb0");
 				int nb = is.read(buff);
-				if(nb < -1)
+				if(nb < 0)
 					break;
 				//fos.close();
-				System.out.println("val "+nb);
+				System.out.println("bytes read: "+nb);
 				os.write(buff,0,nb);
 				Thread.sleep(10);
 			}
 			is.close();
 			System.out.println("End of sending thread");
-			
+
 		} catch(Exception ex) {
 			ex.printStackTrace();
 		}
 	}
-	
+
 	private void handleCmd() {
 		try {
 			InputStream is = s.getInputStream();
@@ -78,7 +81,6 @@ public class ClientHandler {
 	    			s.close();
 	    			break;
 	    		}
-	    		if(Main.debug)
 	    			System.out.println("Received : "+line);
 	    		try {
 	    			handleCommand(line);
@@ -90,7 +92,7 @@ public class ClientHandler {
 			ex.printStackTrace();
 		}
 	}
-	
+
 	private void handleCommand(String line) throws RemoteException {
 		String[] paramList = line.split("/");
 		String type = paramList[0];
@@ -99,22 +101,22 @@ public class ClientHandler {
 			return;
 		}
 		if(type.equals("pointer")) {
-			wm.injectPointerEvent(getMotionEvent(paramList), false);
+			im.injectInputEvent(getMotionEvent(paramList), InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_RESULT);
 			return;
 		}
 		if(type.equals("key")) {
-			wm.injectKeyEvent(getKeyEvent(paramList), false);
+			im.injectInputEvent(getKeyEvent(paramList), InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_RESULT);
 			return;
 		}
 		if(type.equals("trackball")) {
-			wm.injectTrackballEvent(getMotionEvent(paramList), false);
+			im.injectInputEvent(getMotionEvent(paramList), InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_RESULT);
 			return;
 		}
-		
+
 		throw new RuntimeException("Invalid type : "+type);
 
 	}
-	
+
     private static MotionEvent getMotionEvent(String[] args) {
     	int i = 1;
     	long downTime = Long.parseLong(args[i++]);
@@ -123,12 +125,16 @@ public class ClientHandler {
     	float x = Float.parseFloat(args[i++]);
     	float y = Float.parseFloat(args[i++]);
     	int metaState = Integer.parseInt(args[i++]);
-        return MotionEvent.obtain(downTime, eventTime, action, x, y, metaState);
+    	MotionEvent motion = MotionEvent.obtain(downTime, eventTime, action, x, y, metaState);
+    	motion.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+    	return motion;
     }
 
     private static KeyEvent getKeyEvent(String[] args) {
     	int action = Integer.parseInt(args[1]);
     	int code = Integer.parseInt(args[2]);
-    	return new KeyEvent(action, code);
+    	KeyEvent key = new KeyEvent(action, code);
+    	key.setSource(InputDevice.SOURCE_KEYBOARD);
+    	return key;
     }
 }

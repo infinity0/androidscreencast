@@ -1,0 +1,5 @@
+# path to your ddmlib.jar
+sdk-ddmlib=ddmlib.jar
+
+# path to your android.jar
+sdklib=android.jar

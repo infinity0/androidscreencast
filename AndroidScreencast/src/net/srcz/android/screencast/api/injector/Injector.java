@@ -10,6 +10,9 @@ import net.srcz.android.screencast.api.AndroidDevice;
 import net.srcz.android.screencast.api.StreamUtils;
 
 import com.android.ddmlib.IDevice;
+import com.android.ddmlib.AdbCommandRejectedException;
+import com.android.ddmlib.ShellCommandUnresponsiveException;
+import com.android.ddmlib.TimeoutException;
 
 public class Injector {
 	private static final int PORT = 1324;
@@ -139,6 +142,7 @@ public class Injector {
 				return;
 			}
 			os.write((data + "\n").getBytes());
+			System.out.println("Injector wrote: " + data);
 			os.flush();
 		} catch (Exception sex) {
 			try {
@@ -153,7 +157,7 @@ public class Injector {
 	}
 
 	private void init() throws UnknownHostException, IOException,
-			InterruptedException {
+			InterruptedException, TimeoutException, AdbCommandRejectedException {
 		device.createForward(PORT, PORT);
 
 		if (killRunningAgent())
@@ -165,7 +169,7 @@ public class Injector {
 			public void run() {
 				try {
 					launchProg("" + PORT);
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
@@ -198,13 +202,13 @@ public class Injector {
 		}
 	}
 
-	private void launchProg(String cmdList) throws IOException {
+	private void launchProg(String cmdList) throws IOException, TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException {
 		String fullCmd = "export CLASSPATH=" + REMOTE_AGENT_JAR_LOCATION;
 		fullCmd += "; exec app_process /system/bin " + AGENT_MAIN_CLASS + " "
 				+ cmdList;
 		System.out.println(fullCmd);
 		device.executeShellCommand(fullCmd,
-				new OutputStreamShellOutputReceiver(System.out));
+				new OutputStreamShellOutputReceiver(System.out), 0);
 		System.out.println("Prog ended");
 		device.executeShellCommand("rm " + REMOTE_AGENT_JAR_LOCATION,
 				new OutputStreamShellOutputReceiver(System.out));

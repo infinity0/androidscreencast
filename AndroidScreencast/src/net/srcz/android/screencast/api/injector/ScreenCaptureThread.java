@@ -11,6 +11,8 @@ import net.srcz.android.screencast.api.recording.QuickTimeOutputStream;
 
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.RawImage;
+import com.android.ddmlib.AdbCommandRejectedException;
+import com.android.ddmlib.TimeoutException;
 
 public class ScreenCaptureThread extends Thread {
 
@@ -53,7 +55,7 @@ public class ScreenCaptureThread extends Thread {
 					break;
 			} catch (java.nio.channels.ClosedByInterruptException ciex) {
 				break;
-			} catch (IOException e) {
+			} catch (Exception e) {
 				System.err.println((new StringBuilder()).append(
 						"Exception fetching image: ").append(e.toString())
 						.toString());
@@ -85,7 +87,7 @@ public class ScreenCaptureThread extends Thread {
 		}
 	}
 
-	private boolean fetchImage() throws IOException {
+	private boolean fetchImage() throws IOException, TimeoutException, AdbCommandRejectedException {
 		if (device == null) {
 			// device not ready
 			try {

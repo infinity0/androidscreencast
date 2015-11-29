@@ -1,4 +1,4 @@
-<project name="androidscreencast" default="dist" basedir=".">
+<project name="MyInjectEventApp" default="jnlp" basedir=".">
   <description>
         Android Screen Cast build file
   </description>
@@ -19,29 +19,19 @@
   <target name="compile" depends="init"
         description="compile the source " >
     <!-- Compile the java code from ${src} into ${build} -->
-    <javac nowarn="true" srcdir="${src}" destdir="${build}" classpath="${sdk-ddmlib}"/>
+    <javac nowarn="true" srcdir="${src}" destdir="${build}" classpath="${sdklib}"/>
+    <exec executable="dx">
+      <arg value="--dex"/>
+      <arg value="--output=${build}/classes.dex"/>
+      <arg value="${build}"/>
+    </exec>
   </target>
 
-  <target name="injector">
-    <ant antfile="../AndroidScreencastClient/build.xml" inheritAll="false">
-      <target name="clean"/>
-      <target name="dist"/>
-    </ant>
-    <copy file="../AndroidScreencastClient/dist/MyInjectEventApp.jar" todir="${build}"/>
-  </target>
-
-  <target name="dist" depends="compile,injector"
+  <target name="dist" depends="compile"
         description="generate the distribution" >
-
     <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
     <mkdir dir="${dist}"/>
-    <jar jarfile="${dist}/${mainjar}" basedir="${build}">
-      <manifest>
-        <attribute name="Main-Class" value="net.srcz.android.screencast.Main"/>
-        <attribute name="Class-Path" value="${sdk-ddmlib}" />
-      </manifest>
-      <fileset dir="${src}" includes="**/*.png" />
-    </jar>
+    <jar jarfile="${dist}/${mainjar}" basedir="${build}"/>
   </target>
 
   <target name="clean"
@@ -51,4 +41,3 @@
     <delete dir="${dist}"/>
   </target>
 </project>
-

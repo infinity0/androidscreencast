@@ -5,7 +5,16 @@ Homepage : http://code.google.com/p/androidscreencast/
 HOW TO BUILD THE PROJET
 ***********************
 
-Copy file "andrdoiscreencast.conf.example" to parent folder.
-Rename it to "androidscreencast.conf".
-Use your text editor to tune the configuration
-Launch ant (with target dist or jnpl).
+Copy file "local.properties.example" to "local.properties" and set the paths
+correctly as per your local system.
+
+Then, to build and run this:
+
+$ ant dist
+$ java -jar dist/androidscreencast*.jar
+
+On Debian you first (i.e. before the above steps) need to run:
+
+$ socat TCP-LISTEN:5037,fork UNIX-CONNECT:/tmp/5037
+
+and keep this running in the background, whilst running this.

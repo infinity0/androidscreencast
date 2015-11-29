@@ -12,7 +12,6 @@ import net.srcz.android.screencast.api.injector.OutputStreamShellOutputReceiver;
 
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.SyncService.ISyncProgressMonitor;
-import com.android.ddmlib.SyncService.SyncResult;
 
 public class AndroidDevice {
 
@@ -25,7 +24,7 @@ public class AndroidDevice {
 	public void openUrl(String url) {
 		executeCommand("am start "+url);
 	}
-	
+
 	public String executeCommand(String cmd) {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		try {
@@ -42,11 +41,8 @@ public class AndroidDevice {
 			if (device.getSyncService() == null)
 				throw new RuntimeException("SyncService is null, ADB crashed ?");
 
-			SyncResult result = device.getSyncService().pushFile(localFrom.getAbsolutePath(),
-					remoteTo, new NullSyncProgressMonitor());
-			if (result.getCode() != 0)
-				throw new RuntimeException("code = " + result.getCode()
-						+ " message= " + result.getMessage());
+			device.getSyncService().pushFile(localFrom.getAbsolutePath(),
+				remoteTo, new NullSyncProgressMonitor());
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
